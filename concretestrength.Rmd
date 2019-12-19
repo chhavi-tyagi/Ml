@@ -1,24 +1,17 @@
 ---
 title: "Math644 Regression Project"
-author: "Vincent Capodanno/Chhavi Tyagi"
+author: "Chhavi Tyagi"
 date: "11/4/2019"
 output:
   word_document: default
   html_document: default
-UCID: vrc26 and ct364
+UCID:  ct364
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
-#setwd("C:/users/direw/Documents/MATH644")
-#getwd()
-#xy<- read.csv('ConcreteDataCSV.csv')
-#attach(xy)
-#xy
-```
 ```{r}
 setwd("/Users/chhavityagi/Desktop/math644project/")
 getwd()
