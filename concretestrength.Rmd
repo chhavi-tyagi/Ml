@@ -1,0 +1,688 @@
+---
+title: "Math644 Regression Project"
+author: "Vincent Capodanno/Chhavi Tyagi"
+date: "11/4/2019"
+output:
+  word_document: default
+  html_document: default
+UCID: vrc26 and ct364
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#setwd("C:/users/direw/Documents/MATH644")
+#getwd()
+#xy<- read.csv('ConcreteDataCSV.csv')
+#attach(xy)
+#xy
+```
+```{r}
+setwd("/Users/chhavityagi/Desktop/math644project/")
+getwd()
+library(readxl)
+xy<- read_excel('/Users/chhavityagi/Desktop/math644project/ConcreteData.xls')
+attach(xy)
+xy
+```
+
+```{r}
+# Rename column to rmeove non unicode characters
+names(xy)[names(xy) == "ï..Cement"] <- "Cement"
+names(xy)[names(xy) == "BlastFurnaceSlag"] <- "BlastF"
+names(xy)[names(xy) == "Superplasticizer"] <- "SuperP"
+names(xy)[names(xy) == "CoarseAggregate"] <- "Coarse"
+names(xy)[names(xy) == "FineAggregate"] <- "Fine"
+names(xy)[names(xy) == "FLyAsh"] <- "FlyAsh"
+names(xy)[names(xy) == "ConcreteCompressiveStrength"] <- "Strength"
+# get column names
+colnames(xy)
+```
+```{r}
+xy
+```
+
+```{r}
+Cement = xy$Cement
+BlastF= xy$BlastF
+FlyAsh = xy$FlyAsh
+Water = xy$Water
+SuperP = xy$SuperP
+Coarse = xy$Coarse
+Fine = xy$Fine
+Age = xy$Age
+Strength = xy$Strength
+xy
+```
+
+```{r}
+summary(xy)
+```
+```{r}
+pairs(~Cement+BlastF+FLyAsh+Water+SuperP+Coarse+Fine+Age, data =xy)
+```
+
+```{r}
+par(mfrow = c(3,3)) # Create a 2 x 3 plotting matrix
+# The next 4 plots created will be plotted next to each other
+
+# Plot 1
+qqnorm(xy$Cement, pch = 1, frame = FALSE,main = expression("Q-Q plot for Cement"))
+qqline(xy$Cement, col = "steelblue", lwd = 2)
+
+# Plot 2
+qqnorm(xy$BlastF, pch = 1, frame = FALSE,main = expression("Q-Q plot for BlastF"))
+qqline(xy$BlastF, col = "steelblue", lwd = 2)
+
+# Plot 3
+qqnorm(xy$FlyAsh, pch = 1, frame = FALSE,main = expression("Q-Q plot for FlyAsh"))
+qqline(xy$FlyAsh, col = "steelblue", lwd = 2)
+
+# Plot 4
+qqnorm(xy$Water, pch = 1, frame = FALSE,main = expression("Q-Q plot for Water"))
+qqline(xy$Water, col = "steelblue", lwd = 2)
+
+# Plot 5
+qqnorm(xy$SuperP, pch = 1, frame = FALSE,main = expression("Q-Q plot for SuperP"))
+qqline(xy$SuperP, col = "steelblue", lwd = 2)
+
+#Plot 6
+qqnorm(xy$Coarse, pch = 1, frame = FALSE,main = expression("Q-Q plot for Coarse"))
+qqline(xy$Coarse, col = "steelblue", lwd = 2)
+
+# Plot 7
+qqnorm(xy$Fine, pch = 1, frame = FALSE,main = expression("Q-Q plot for Fine"))
+qqline(xy$Fine, col = "steelblue", lwd = 2)
+
+# Plot 8
+qqnorm(xy$Age, pch = 1, frame = FALSE,main = expression("Q-Q plot for Age"))
+qqline(xy$Age, col = "steelblue", lwd = 2)
+```
+
+
+
+```{r}
+par(mfrow = c(2,4)) # Create a 2 x 3 plotting matrix
+# The next 4 plots created will be plotted next to each other
+
+# Plot 1
+boxplot_Cement=boxplot(Cement,col='red',xlab="Cement")
+boxplot_Cement$output
+
+# Plot 2
+boxplot_BlastF=boxplot(BlastF,col='green',xlab="BlastF")
+boxplot_BlastF$output
+
+# Plot 3
+boxplot_FLyAsh=boxplot(FLyAsh,col='blue',xlab="FLyAsh")
+boxplot_FLyAsh$output
+
+# Plot 4
+boxplot_Water=boxplot(Water,col='orange',xlab="Water")
+boxplot_Water$output
+
+#Plot 5
+boxplot_SuperP=boxplot(SuperP,col='red',xlab="SuperP")
+boxplot_SuperP$output
+
+#Plot 6
+boxplot_Coarse=boxplot(Coarse,col='green',xlab="Coarse")
+boxplot_Coarse$output
+
+
+#Plot 7
+boxplot_Fine=boxplot(Fine,col='blue',xlab="Fine")
+boxplot_Fine$output
+
+#Plot 8
+boxplot_Age=boxplot(Age,col='orange',xlab="Age")
+boxplot_Age$output
+```
+
+```{r}
+reg = lm(Strength~Cement+BlastF+FlyAsh+Water+SuperP+Coarse+Fine+Age)
+summary(reg)
+```
+
+```{r}
+anova(reg)
+```
+
+
+```{r}
+#residuals versus leverage
+#  https://medium.com/data-distilled/residual-plots-part-4-residuals-vs-leverage-plot-14aeed009ef7
+par(mfrow=c(2,2))
+plot(reg)
+```
+
+
+```{r}
+reg1 = lm(Strength~Cement+BlastF+FlyAsh+Water+SuperP+Age)
+summary(reg1)
+```
+
+```{r}
+residuals1<-residuals(reg1)
+plot(xy$Strength, residuals1,ylab = "Residuals", xlab = "Strength",main = "Initial Linear Model") 
+abline(0, 0)                  # the horizon
+
+```
+
+
+```{r}
+#Scale the addtives
+library(dplyr)
+library(tidyverse)
+
+## Add new column that is the output of the ANN, using mutate() in dplyr
+# Calculate water to binder ratio as WaterBind = W / (cemenet+flyash+Blastf)
+
+xy<- mutate(xy, WaterBind = (Water/(Cement + FlyAsh + BlastF + SuperP)))
+xy
+WaterBind<-xy$WaterBind
+```
+```{r}
+summary(xy)
+```
+
+
+```{r}
+# Regress with Water to Binder Ratio
+
+regwb = lm(Strength ~ Coarse+Fine+Age+WaterBind)
+summary(regwb)
+```
+
+
+```{r}
+plot(WaterBind, Strength)
+```
+
+```{r}
+res <- cor(xy)
+round(res, 3)
+```
+
+```{r}
+# Basic Scatterplot Matrix
+pairs(~WaterBind+Coarse+Fine+Age,data=xy,
+   main="Simple Scatterplot Matrix")
+```
+
+```{r}
+plot(Cement, Strength)
+plot(BlastF, Strength)
+plot(FlyAsh, Strength)
+plot(Water, Strength)
+plot(SuperP, Strength)
+plot(Coarse, Strength)
+plot(Fine, Strength)
+plot(Age, Strength)
+```
+
+
+
+```{r}
+WBSquared = WaterBind*WaterBind
+RegBIC<-lm(Strength~Fine+Age+WBSquared)
+summary(RegBIC)
+```
+```{r}
+AgeSquared = Age*Age
+RegA2<-lm(Strength~Fine+WaterBind+Age+AgeSquared)
+summary(RegA2)
+```
+```{r}
+AgeCubed = Age*Age*Age
+RegAgeCubed<-lm(Strength~Fine+WaterBind+Age+AgeCubed)
+summary(RegAgeCubed)
+```
+```{r}
+LogAge = log(Age+1)
+RegLogAge<-lm(Strength~Fine+WaterBind+LogAge)
+summary(RegLogAge)
+```
+```{r}
+LogWB = log(WaterBind+1)
+RegLogWB<-lm(Strength~Fine+LogWB+LogAge)
+summary(RegLogWB)
+```
+
+```{r}
+FineSquared = Fine*Fine
+RegBIC<-lm(Strength~FineSquared+LogWB+LogAge)
+summary(RegBIC)
+```
+```{r}
+OneOverAge = 1/Age
+RegBIC<-lm(Strength~FineSquared+LogWB+OneOverAge)
+summary(RegBIC)
+```
+```{r}
+BW <- 1/WaterBind
+RegBIC<-lm(Strength~Fine+BW+LogAge)
+summary(RegBIC)
+```
+```{r}
+LogBW <- log(1/WaterBind)
+RegBW<-lm(Strength~SuperP+Fine+LogBW+LogAge)
+summary(RegBW)
+```
+```{r}
+FineSuperP <- Fine*SuperP
+FineBW<-Fine*BW
+FineCement<-Fine*Cement
+FineFly<-Fine*FlyAsh
+FineW<-Fine*Water
+FineB<-Fine*BlastF
+FSW<-Fine*SuperP*Water
+FFW<-Fine*FlyAsh*Water
+RegInteract<-lm(Strength~FineSuperP+FineBW+FSW+FFW+FineCement+FineB+FineFly+FineW+SuperP+Fine+LogBW+LogAge)
+summary(RegInteract)
+```
+
+```{r}
+residuals2<-residuals(RegInteract)
+plot(xy$Strength, residuals2,ylab = "Residuals", xlab = "Strength",main = "Final Linear Model") 
+abline(0, 0)                  # the horizon
+```
+```{r}
+anova(RegInteract)
+```
+
+```{r}
+plot(Age, Strength)
+```
+```{r}
+plot(FlyAsh, Strength)
+```
+
+```{r}
+plot(SuperP, Strength)
+```
+
+```{r}
+plot(Cement, Strength)
+```
+
+```{r}
+plot(Fine, Strength)
+```
+
+```{r}
+plot(Water, Strength)
+```
+```{r}
+plot(AgeSquared, Strength)
+```
+
+
+```{r}
+plot(AgeCubed,Strength)
+```
+```{r}
+plot(LogAge, Strength)
+```
+```{r}
+LogOneOverAge=log(1/Age)
+
+#FineSuperP, FineBW, FineCement, FineFly, FSW, FFW, LogOneOverAge, SuperP, Strength)
+
+#par(mfrow = c(3,4)) # Create a 2 x 3 plotting matrix
+# The next 4 plots created will be plotted next to each other
+
+# Plot 1
+plot(FineSuperP,Strength)
+plot(FineBW,Strength)
+plot(FineCement,Strength)
+plot(FineFly,Strength)
+plot(FSW,Strength)
+plot(FFW,Strength)
+plot(LogOneOverAge, Strength)
+plot(SuperP, Strength)
+
+```
+
+```{r}
+#Scale the addtives
+library(dplyr)
+library(tidyverse)
+
+## Add new column using mutate() in dplyr
+# Calculate water to binder ratio as WaterBind = W / (cement+flyash+Blastf)
+OneOverLogAge=1/LogAge
+LogOneOverAge=log(1/Age)
+
+xy<- mutate(xy, WaterBind = (Water/(Cement + FlyAsh + BlastF + SuperP)))
+xy
+WaterBind<-xy$WaterBind
+```
+
+
+```{r}
+# Regress simple linear model
+WB = WaterBind
+BW = 1/WB
+Reg1<-lm(Strength ~ WB + Cement + BlastF + FlyAsh + Water + SuperP + Coarse + Fine + Age)
+summary(Reg1)
+```
+```{r}
+# Reg1 predicted
+Predicted1<-predict.lm(Reg1)
+
+# model actual vs predicted
+line<-lm(Predicted1~Strength)
+coef(line)
+```
+```{r}
+# predicted versus actuals
+plot(Predicted1, Strength)
+abline(13.613, 0.6199, col=4)
+```
+
+```{r}
+
+## CReate full model Reg2
+FineSuperP <- Fine*SuperP
+FineBW<-Fine*BW
+FineCement<-Fine*Cement
+FineFly<-Fine*FlyAsh
+FineW<-Fine*Water
+FineB<-Fine*BlastF
+FSW<-Fine*SuperP*Water
+FFW<-Fine*FlyAsh*Water
+
+### adding more inverse
+#  OneOverCement,OneOverFlyAsh,OneOverWater,OneOverBlast, OneOverSuperP, OneOverCoarse, OneOverFine, OneOverAge
+
+# no need for 1/WB = BW or 1/WB^2 = BW^2
+OneOverCement=1/(1+Cement)
+OneOverFlyAsh=1/(1+FlyAsh)
+OneOverWater=1/(1+Water)
+OneOverBlastF=1/(1+BlastF)
+OneOverSuperP=1/(1+SuperP)
+OneOverCoarse=1/(1+Coarse)
+OneOverFine=1/(1+Fine)
+OneOverAge=1/(1+Age)
+
+### adding inverse square
+#  OneOverCement,OneOverFlyAsh,OneOverWater,OneOverBlast, OneOverSuperP, OneOverCoarse, OneOverFine, OneOverAge
+
+OneOverCement2=1/(1+Cement)^2
+OneOverFlyAsh2=1/(1+FlyAsh)^2
+OneOverWater2=1/(1+Water)^2
+OneOverBlastF2=1/(1+BlastF)^2
+OneOverSuperP2=1/(1+SuperP)^2
+OneOverCoarse2=1/(1+Coarse)^2
+OneOverFine2=1/(1+Fine)^2
+OneOverAge2=1/(1+Age)^2
+
+### adding more squares
+# SquaredCement, SquaredFlyAsh, SquaredWater, SquaredBlastF, SquaredSuperP, SquaredCoarse, SquaredFIne, SquaredAge, Squared BW
+SquaredCement=Cement^2
+SquaredFlyAsh=FlyAsh^2
+SquaredWater=Water^2
+SquaredBlastF=BlastF^2
+SquaredSuperP=SuperP^2
+SquaredCoarse=Coarse^2
+SquaredFine=Fine^2
+SquaredAge=Age^2
+SquaredBW=WaterBind^2
+
+### adding more log
+# LogCement, LogFlyAsh, LogWater, LogBlastF, LogSuperP, LogCoarse, LogFine, LogAge, LogBW
+LogCement=log(Cement+1)
+LogFlyAsh=log(FlyAsh+1)
+LogWater=log(Water+1)
+LogBlastF=log(BlastF+1)
+LogSuperP=log(SuperP+1)
+LogCoarse=log(Coarse+1)
+LogFine=log(Fine+1)
+LogAge=log(Age+1)
+LogBW=log(BW+1)
+LogWB=log(WB+1)
+```
+
+
+```{r}
+# Reduced model 4 originally made by hand has higher error
+
+Reg4<-lm(formula = Strength ~ WB + FSW + FFW + FineCement + FineB + 
+    FineW + Fine + LogWB + LogAge + OneOverFlyAsh + OneOverWater + 
+    OneOverBlastF + OneOverFine + OneOverAge + SquaredFlyAsh + 
+    SquaredWater + SquaredBlastF + SquaredSuperP + SquaredCoarse + 
+    SquaredFine + SquaredAge + SquaredBW + LogCement + LogFlyAsh + 
+    LogWater + LogSuperP + LogCoarse + LogFine)
+summary(Reg4)
+```
+
+
+```{r}
+# Note: All intercations using lm(d~(a+b+c)^2) which gives a, b, c, ab, bc, and ac
+
+RegFull<-lm(Strength~(WB+BW+Cement+FlyAsh+Water+BlastF+SuperP+Fine+Coarse+Age)^2+LogBW+LogWB+LogAge+OneOverCement+OneOverFlyAsh+OneOverWater+OneOverBlastF+OneOverSuperP+OneOverCoarse+OneOverFine+OneOverAge+OneOverCement2+OneOverFlyAsh2+OneOverWater2+OneOverBlastF2+OneOverSuperP2+OneOverCoarse2+OneOverFine2+OneOverAge2+SquaredCement+SquaredFlyAsh+SquaredWater+SquaredBlastF+SquaredSuperP+SquaredCoarse+SquaredFine+SquaredAge+SquaredBW+LogCement+LogFlyAsh+LogWater+LogBlastF+LogSuperP+LogCoarse+LogFine)
+
+summary(RegFull)
+```
+
+
+```{r}
+# Reg1 AIC
+step(RegFull, direction="both", trace=0, k=2)
+```
+
+
+```{r}
+# Reg2 BIC
+step(RegFull, direction="both", trace=0, k=log(1000))
+```
+```{r}
+
+# Use BIC reduce model Reg3 which has fewer terms than AIC
+
+Reg3<-lm(formula = Strength ~ WB + BW + Cement + FlyAsh + Water + BlastF + 
+    SuperP + Fine + Coarse + Age + LogBW + LogAge + OneOverCement + 
+    OneOverFlyAsh + OneOverBlastF + OneOverCoarse + OneOverFine + 
+    OneOverBlastF2 + OneOverFine2 + SquaredCement + SquaredFlyAsh + 
+    SquaredFine + SquaredAge + LogCement + LogFlyAsh + LogWater + 
+    LogSuperP + LogFine + WB:Cement + WB:FlyAsh + WB:BlastF + 
+    BW:Cement + BW:FlyAsh + BW:BlastF + BW:Age + Cement:Fine + 
+    Cement:Age + FlyAsh:Water + Water:Fine + Water:Coarse + BlastF:SuperP)
+
+summary(Reg3)
+```
+```{r}
+# Reg3
+Predicted3<-predict.lm(Reg3)
+
+# model actual vs predicted
+line<-lm(Predicted3~Strength)
+coef(line)
+```
+
+
+```{r}
+# graph predicted versus actuals
+plot(Predicted3, Strength)
+abline(3.355, 0.9063, col=2)
+```
+```{r}
+Residuals3<-residuals(Reg3)
+
+plot(xy$Strength, Residuals3,ylab = "Residuals", xlab = "Strength",main = "Final Linear Model") 
+abline(0, 0)                  # the horizon
+```
+```{r}
+anova(Reg3)
+```
+
+
+
+```{r}
+
+#  Reg4
+Predicted4<-predict.lm(Reg4)
+
+# model actual vs predicted
+line<-lm(Predicted4~Strength)
+coef(line)
+```
+
+
+```{r}
+# predicted versus actuals
+plot(Predicted4, Strength)
+abline(4.337, 0.8789, col=3)
+```
+```{r}
+residuals4<-residuals(Reg4)
+
+plot(xy$Strength, residuals4,ylab = "Residuals", xlab = "Strength",main = "Final Linear Model") 
+abline(0, 0)                  # the horizon
+```
+```{r}
+anova(Reg4)
+```
+```{r}
+# Cross valid of Reg4 hand model
+
+Reg4xy<-data.frame(Strength, WB, FSW, FFW, FineCement, FineB, 
+    FineW, Fine, LogWB, LogAge, OneOverFlyAsh, OneOverWater, 
+    OneOverBlastF, OneOverFine, OneOverAge, SquaredFlyAsh,
+    SquaredWater, SquaredBlastF, SquaredSuperP, SquaredCoarse, 
+    SquaredFine, SquaredAge, SquaredBW, LogCement, LogFlyAsh, 
+    LogWater, LogSuperP, LogCoarse, LogFine)
+
+
+library(tidyverse)
+library(caret)
+
+# Define training control
+set.seed(123) 
+train.control <- trainControl(method = "cv", number = 10)
+# Train the model
+model <- train(Strength ~., data = Reg4xy, method = "lm",
+               trControl = train.control)
+# Summarize the results
+print(model)
+
+```
+
+
+
+```{r}
+
+# Reg3 cross validaiton
+
+WBCement<-WB*Cement
+WBFlyAsh<-WB*FlyAsh
+WBBlastF<-WB*BlastF
+BWCement<-BW*Cement
+BWFlyAsh<-BW*FlyAsh
+BWBlastF<-BW*BlastF
+BWAge<-BW*Age
+CementFine<-Cement*Fine
+CementAge<-Cement*Age
+FlyAshWater<-FlyAsh*Water
+WaterFine<-Water*Fine
+WaterCoarse<-Water*Coarse
+BlastFSuperP<-BlastF*SuperP
+
+
+
+Reg3xy<-data.frame(Strength, WB, BW, Cement, FlyAsh, Water, BlastF, 
+    SuperP, Fine, Coarse, Age, LogBW, LogAge,OneOverCement, 
+    OneOverFlyAsh, OneOverBlastF, OneOverCoarse, OneOverFine, 
+    OneOverBlastF2,OneOverFine2, SquaredCement, SquaredFlyAsh,
+    SquaredFine, SquaredAge, LogCement, LogFlyAsh, LogWater, 
+    LogSuperP, LogFine, WBCement, WBFlyAsh, WBBlastF, 
+    BWCement, BWFlyAsh, BWBlastF, BWAge, CementFine, 
+    CementAge, FlyAshWater, WaterFine, WaterCoarse, BlastFSuperP)
+ 
+
+
+```
+
+```{r}
+###
+
+
+library(tidyverse)
+library(caret)
+
+# Define training control
+set.seed(123) 
+train.control <- trainControl(method = "cv", number = 10)
+# Train the model
+model <- train(Strength ~., data = Reg3xy, method = "lm",
+               trControl = train.control)
+# Summarize the results
+print(model)
+```
+```{r}
+
+# Reg5 eliminates insignificant features from ANOVA table for Reg3
+
+Reg5<-lm(formula = Strength ~ WB + BW + Cement + FlyAsh + Water + BlastF + 
+    SuperP + Coarse + Age + LogBW + LogAge + OneOverCement + 
+    OneOverFlyAsh + OneOverBlastF + OneOverFine + 
+    OneOverBlastF2 + SquaredFine + LogCement + LogFlyAsh + 
+    LogSuperP +  WB:Cement + WB:FlyAsh + WB:BlastF + BW:FlyAsh + BW:BlastF + BW:Age + Cement:Fine + 
+    Cement:Age + Water:Fine + Water:Coarse + BlastF:SuperP)
+
+summary(Reg5)
+```
+```{r}
+#  Reg5
+Predicted5<-predict.lm(Reg5)
+
+# model actual vs predicted
+line<-lm(Predicted5~Strength)
+coef(line)
+```
+
+```{r}
+# predicted versus actuals
+plot(Predicted5, Strength)
+abline(4.4954939, 0.8744901 , col=4)
+```
+
+```{r}
+anova(Reg5)
+```
+```{r}
+#residuals versus leverage
+#  https://medium.com/data-distilled/residual-plots-part-4-residuals-vs-leverage-plot-14aeed009ef7
+par(mfrow=c(2,2))
+plot(Reg5)
+```
+
+```{r}
+Reg5xy<-data.frame(Strength, WB, BW, Cement, FlyAsh, Water, BlastF, 
+    SuperP, Coarse, Age, LogBW, LogAge,OneOverCement, 
+    OneOverFlyAsh, OneOverBlastF, OneOverFine, 
+    OneOverBlastF2, SquaredFine, LogCement, LogFlyAsh, 
+    LogSuperP, WBCement, WBFlyAsh, WBBlastF, BWFlyAsh, BWBlastF, BWAge, CementFine, 
+    CementAge, WaterFine, WaterCoarse, BlastFSuperP)
+
+#10-fold Xval of Reg 5
+
+library(tidyverse)
+library(caret)
+
+# Define training control
+set.seed(123) 
+train.control <- trainControl(method = "cv", number = 10)
+# Train the model
+model <- train(Strength ~., data = Reg5xy, method = "lm",
+               trControl = train.control)
+
+
+# Summarize the results
+print(model)
+```
+
+
